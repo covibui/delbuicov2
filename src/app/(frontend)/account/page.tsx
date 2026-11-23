@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { AccountForm } from '@/components/AuthForms'
+import { ImportButton } from '@/components/ImportButton'
 import { getCurrentUser, getPayloadClient } from '@/lib/data'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,8 @@ export default async function AccountPage() {
     limit: 500,
     select: { title: true, slug: true },
   })
+  const totalRecipes = user.role === 'admin' ? (await payload.count({ collection: 'recipes' })).totalDocs : 1
+
   return (
     <>
       <div className="page-head">
@@ -25,6 +28,7 @@ export default async function AccountPage() {
       </div>
       <div className="auth-card" style={{ maxWidth: 560 }}>
         <AccountForm id={user.id} name={user.name} email={user.email} />
+        {user.role === 'admin' && totalRecipes === 0 ? <ImportButton /> : null}
         {user.role === 'admin' ? (
           <div className="notice" style={{ marginTop: 28 }}>
             You're the admin. Invite family and manage chapters in the <a href="/admin">admin panel</a>.

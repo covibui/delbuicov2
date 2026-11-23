@@ -31,16 +31,12 @@ The family cookbook. Anyone can read it; family members log in to add and edit r
 
 ### Import the old recipes (once)
 
-From your computer, in the project folder:
-
-```bash
-npm install
-vercel env pull .env          # copies DATABASE_URL, BLOB token etc. from Vercel
-SEED_ADMIN_EMAIL=you@email.com SEED_ADMIN_PASSWORD='pick-a-password' npm run seed
-```
+1. Go to `/admin` and create the first account. It automatically becomes the admin.
+2. Go to `/account` and press **Import old recipes** (shown to the admin while the cookbook is empty).
 
 This creates all 24 chapters (with cover photos), the tags, the 59 recipes, and accounts for the
-original authors so their recipes keep their names. You become the admin. Safe to run twice.
+original authors so their recipes keep their names. Brianna's recipes are credited to the admin
+running the import. Safe to press twice. (`npm run seed` does the same from the command line.)
 
 ### Invite the family
 

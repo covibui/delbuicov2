@@ -12,6 +12,7 @@ import { Media } from './collections/Media'
 import { Chapters } from './collections/Chapters'
 import { Tags } from './collections/Tags'
 import { Recipes } from './collections/Recipes'
+import { importOldSite } from './lib/importOldSite'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -23,6 +24,25 @@ export default buildConfig({
     meta: { titleSuffix: ' · DelBuiCo Cookbook' },
   },
   collections: [Recipes, Chapters, Tags, Media, Users],
+  endpoints: [
+    {
+      // One-time import of the old site's recipes. Admin only; safe to repeat.
+      path: '/import-old-site',
+      method: 'post',
+      handler: async (req) => {
+        if ((req.user as { role?: string } | null)?.role !== 'admin') {
+          return Response.json({ error: 'Only the admin can do this.' }, { status: 403 })
+        }
+        try {
+          const result = await importOldSite(req.payload, { adminUserId: req.user!.id as number })
+          return Response.json({ result })
+        } catch (err) {
+          req.payload.logger.error({ err, msg: 'import failed' })
+          return Response.json({ error: err instanceof Error ? err.message : 'Import failed' }, { status: 500 })
+        }
+      },
+    },
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
