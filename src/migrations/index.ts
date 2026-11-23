@@ -1,5 +1,6 @@
 import * as migration_20261122_235020_initial from './20261122_235020_initial';
 import * as migration_20261123_002931_remove_invite_email from './20261123_002931_remove_invite_email';
+import * as migration_20261123_003632_blob_storage_fields from './20261123_003632_blob_storage_fields';
 
 export const migrations = [
   {
@@ -10,6 +11,11 @@ export const migrations = [
   {
     up: migration_20261123_002931_remove_invite_email.up,
     down: migration_20261123_002931_remove_invite_email.down,
-    name: '20261123_002931_remove_invite_email'
+    name: '20261123_002931_remove_invite_email',
+  },
+  {
+    up: migration_20261123_003632_blob_storage_fields.up,
+    down: migration_20261123_003632_blob_storage_fields.down,
+    name: '20261123_003632_blob_storage_fields'
   },
 ];

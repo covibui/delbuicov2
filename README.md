@@ -54,7 +54,7 @@ npm run dev              # http://localhost:3000 (schema is created automaticall
 npm run seed             # optional: load the old recipes
 ```
 
-When you change a collection's fields: `npm run payload migrate:create <name>` and commit the new file in `src/migrations/`.
+When you change a collection's fields: `npm run payload migrate:create <name>` and commit the new file in `src/migrations/`. The database schema is the same with or without `BLOB_READ_WRITE_TOKEN` (see `src/collections/Media.ts`), so migrations can be created either way.
 
 ## How recipe text is handled
 

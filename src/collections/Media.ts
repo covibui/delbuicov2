@@ -21,6 +21,12 @@ export const Media: CollectionConfig = {
         beforeChange: [({ req, operation, value }) => (operation === 'create' && req.user ? req.user.id : value)],
       },
     },
+    // The Vercel Blob plugin adds this column when BLOB_READ_WRITE_TOKEN is set.
+    // Declare it ourselves otherwise, so the database schema is the same with or
+    // without the token (keeps migrations consistent between local and production).
+    ...(process.env.BLOB_READ_WRITE_TOKEN
+      ? []
+      : [{ name: '_objectKey', type: 'text' as const, admin: { hidden: true } }]),
   ],
   upload: {
     mimeTypes: ['image/*'],
