@@ -136,7 +136,10 @@ export interface UserAuthOperations {
 export interface Recipe {
   id: number;
   title: string;
-  chapter: number | Chapter;
+  /**
+   * Leave empty for Uncategorized.
+   */
+  chapter?: (number | null) | Chapter;
   tags?: (number | Tag)[] | null;
   servings?: number | null;
   prepMinutes?: number | null;
@@ -156,7 +159,7 @@ export interface Recipe {
   /**
    * One step per line.
    */
-  stepsText: string;
+  stepsText?: string | null;
   /**
    * Optional. Tips, conversions, variations.
    */
@@ -167,6 +170,10 @@ export interface Recipe {
    * Credited on the recipe page.
    */
   addedBy?: (number | null) | User;
+  /**
+   * Whose recipe it is, if not the person who added it (e.g. Miche). Leave empty to credit whoever added it.
+   */
+  cookName?: string | null;
   /**
    * Part of the web address. Filled in automatically.
    */
@@ -277,6 +284,7 @@ export interface User {
   id: number;
   name: string;
   role: 'admin' | 'member';
+  hideName?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -415,6 +423,7 @@ export interface RecipesSelect<T extends boolean = true> {
   photo?: T;
   sourceUrl?: T;
   addedBy?: T;
+  cookName?: T;
   slug?: T;
   ingredients?:
     | T
@@ -517,6 +526,7 @@ export interface MediaSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  hideName?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

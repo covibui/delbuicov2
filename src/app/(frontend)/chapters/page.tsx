@@ -9,32 +9,32 @@ export default async function ContentsPage() {
   const chapters = await getChapters()
   const total = chapters.reduce((n, c) => n + (c.recipes?.docs?.length || 0), 0)
   return (
-    <>
-      <div className="page-head">
-        <div className="label label--rust">Contents</div>
-        <h1>
-          The <em>Chapters</em>
-        </h1>
-        <div className="flourish">
-          {chapters.length} chapters · {total} recipes
+    <main className="wrap">
+      <div className="sheet sheet--pad">
+        <div className="sec-head" style={{ marginBottom: 0 }}>
+          <h1 className="t-h1">Contents</h1>
+          <span className="muted-i">
+            {chapters.length} chapters · {total} recipes
+          </span>
         </div>
+        <div className="dbl" />
+        <nav className="toc" aria-label="Chapters">
+          {chapters.map((c) => {
+            const n = c.recipes?.docs?.length || 0
+            return (
+              <Link key={c.id} href={`/chapters/${c.slug}`} className={n ? undefined : 'empty'}>
+                <span className="num">{toRoman(c.order)}.</span>
+                <span className="name">{c.title}</span>
+                <span className="dots" />
+                <span className="count">{n || 'empty'}</span>
+              </Link>
+            )
+          })}
+        </nav>
+        <p className="muted-i" style={{ margin: '22px 0 0' }}>
+          Empty chapters stay listed so new recipes have a place to go.
+        </p>
       </div>
-      <nav className="toc" aria-label="Chapters">
-        {chapters.map((c) => {
-          const count = c.recipes?.docs?.length || 0
-          return (
-            <Link
-              key={c.id}
-              href={`/chapters/${c.slug}`}
-              className={`toc__item${count ? '' : ' toc__item--empty'}`}
-            >
-              <span className="toc__num">{toRoman(c.order)}.</span>
-              <span className="toc__title">{c.title}</span>
-              <span className="toc__count">{count || '—'}</span>
-            </Link>
-          )
-        })}
-      </nav>
-    </>
+    </main>
   )
 }

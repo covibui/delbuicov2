@@ -8,13 +8,19 @@ The family cookbook. Anyone can read it; family members log in to add and edit r
 
 | Page | What it does |
 |---|---|
-| `/` | Home: newest recipes, chapter grid |
-| `/chapters`, `/chapters/[slug]` | Table of contents; recipes A–Z, numbered like a cookbook (*IX · 4*) |
-| `/recipes/[slug]` | Recipe page with ×½ / ×2 / ×3 scaling and print view |
-| `/search` | Search titles + ingredients; filter by chapter, cook, tag |
-| `/add` | **Quick Add**: paste a link, paste text, or type. Phone-friendly. `/add?edit=ID` edits. |
-| `/login`, `/account` | Family login; change your name and password; your recipes |
+| `/` | Home: featured recipe of the week, newest, the cooks, biggest chapters |
+| `/chapters`, `/chapters/[slug]` | Contents with dotted leaders; chapter table sortable A–Z or Quickest, filter by cook |
+| `/recipes/[slug]` | Recipe page with ×½ / ×2 scaling, substitutes, and a one-page print layout |
+| `/search` | Live search of titles + ingredients; filter by chapter, cook, tag |
+| `/add` | **Quick Add**: paste a link, paste text, or type. Live preview, drafts saved on the device. `/add?edit=ID` edits. |
+| `/login` | Sign in (no public sign-up; Bri resets passwords) |
+| `/account` | My recipes (view / edit / delete), hide my name (“Family recipe”), profile, password, delete account |
 | `/admin` | Payload admin: invite people, manage chapters and tags, fix anything |
+
+**Design:** follows the “DelBuiCo Cookbook” Claude Design (Nov 2026): cream sheet on grey, Libre Bodoni / EB Garamond / Jost, rust accents.
+
+**Credit:** a recipe is credited to its *Cook* if one is set (e.g. “by Miche · added by Bri”), otherwise to whoever added it.
+Anyone who hides their name shows as “Family recipe”.
 
 **Rules:** recipes publish on save. Members edit/delete only their own recipes; the admin can edit everything. The first account ever created becomes admin.
 

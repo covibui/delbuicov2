@@ -76,7 +76,12 @@ export const Recipes: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        { name: 'chapter', type: 'relationship', relationTo: 'chapters', required: true, admin: { width: '50%' } },
+        {
+          name: 'chapter',
+          type: 'relationship',
+          relationTo: 'chapters',
+          admin: { width: '50%', description: 'Leave empty for Uncategorized.' },
+        },
         { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true, admin: { width: '50%' } },
       ],
     },
@@ -114,7 +119,6 @@ export const Recipes: CollectionConfig = {
       name: 'stepsText',
       label: 'Steps',
       type: 'textarea',
-      required: true,
       admin: { rows: 10, description: 'One step per line.' },
     },
     {
@@ -141,6 +145,15 @@ export const Recipes: CollectionConfig = {
             return value
           },
         ],
+      },
+    },
+    {
+      name: 'cookName',
+      label: 'Cook',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description: 'Whose recipe it is, if not the person who added it (e.g. Miche). Leave empty to credit whoever added it.',
       },
     },
     {
@@ -180,6 +193,19 @@ export const Recipes: CollectionConfig = {
     beforeChange: [
       async ({ data, req, originalDoc }) => {
         if (typeof data.title === 'string') data.title = cleanText(data.title)
+        if (typeof data.cookName === 'string') data.cookName = cleanText(data.cookName)
+        // No chapter picked (or cleared) → Uncategorized
+        if (!data.chapter && (data.chapter !== undefined || !originalDoc?.chapter)) {
+          const { docs } = await req.payload.find({
+            collection: 'chapters',
+            where: { slug: { equals: 'uncategorized' } },
+            limit: 1,
+            depth: 0,
+            req,
+            overrideAccess: true,
+          })
+          if (docs[0]) data.chapter = docs[0].id
+        }
         if (typeof data.ingredientsText === 'string') {
           data.ingredients = parseIngredientsText(data.ingredientsText)
           data.ingredientsText = data.ingredients.map((i: { raw: string }) => i.raw).join('\n')

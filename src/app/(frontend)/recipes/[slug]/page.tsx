@@ -1,18 +1,20 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import type { Tag } from '@/payload-types'
 import {
-  addedByName,
+  bylineOf,
   canEdit,
   chapterOf,
-  getChapters,
+  creditOf,
+  getAllRecipes,
   getCurrentUser,
   getPayloadClient,
   mediaUrl,
-  recipeNumber,
+  romanOf,
+  tagsOf,
+  totalMinutes,
 } from '@/lib/data'
-import { formatMinutes, splitLines, toRoman, type ParsedIngredient } from '@/lib/ingredients'
-import { Ingredients } from '@/components/Ingredients'
+import { formatMinutes, splitLines, type ParsedIngredient } from '@/lib/ingredients'
+import { RecipeBody } from '@/components/RecipeBody'
 import { PrintButton } from '@/components/PrintButton'
 
 export const dynamic = 'force-dynamic'
@@ -21,185 +23,158 @@ type Props = { params: Promise<{ slug: string }> }
 
 async function getRecipe(slug: string) {
   const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: 'recipes',
-    where: { slug: { equals: slug } },
-    limit: 1,
-    depth: 1,
-  })
+  const { docs } = await payload.find({ collection: 'recipes', where: { slug: { equals: slug } }, limit: 1, depth: 1 })
   return docs[0] || null
 }
 
 export async function generateMetadata({ params }: Props) {
   const r = await getRecipe((await params).slug)
-  return { title: r?.title || 'Recipe' }
+  return { title: r?.title || 'Recipe not found' }
 }
+
+const PrintIcon = () => (
+  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z" />
+  </svg>
+)
 
 export default async function RecipePage({ params }: Props) {
   const { slug } = await params
   const recipe = await getRecipe(slug)
   if (!recipe) notFound()
 
-  const [user, number, chapters] = await Promise.all([getCurrentUser(), recipeNumber(recipe), getChapters()])
+  const [user, all] = await Promise.all([getCurrentUser(), getAllRecipes()])
   const chapter = chapterOf(recipe)
-  const by = addedByName(recipe)
-  const steps = splitLines(recipe.stepsText)
-  const equipment = splitLines(recipe.equipmentText)
+  const roman = romanOf(chapter)
+  const credit = creditOf(recipe)
+  const byline = bylineOf(recipe)
+  const steps = splitLines(recipe.stepsText).filter((s) => !/^\(no steps written yet\)$|^\(none listed\)$/i.test(s))
+  const items: ParsedIngredient[] = (recipe.ingredients || [])
+    .filter((i) => !/^\(none listed\)$/i.test(i.raw || ''))
+    .map((i) => ({
+      raw: i.raw || '',
+      qty: i.qty,
+      qtyMax: i.qtyMax,
+      unit: i.unit,
+      altQty: i.altQty,
+      altUnit: i.altUnit,
+      item: i.item || i.raw || '',
+      note: i.note,
+    }))
   const photo = mediaUrl(recipe.photo, 'card')
-  const tags = (recipe.tags || []).filter((t): t is Tag => typeof t === 'object')
-  const items: ParsedIngredient[] = (recipe.ingredients || []).map((i) => ({
-    raw: i.raw || '',
-    qty: i.qty,
-    qtyMax: i.qtyMax,
-    unit: i.unit,
-    altQty: i.altQty,
-    altUnit: i.altUnit,
-    item: i.item || i.raw || '',
-    note: i.note,
-  }))
+  const total = totalMinutes(recipe)
 
-  // previous / next within the chapter (alphabetical)
-  const siblings = chapters.find((c) => c.id === chapter?.id)?.recipes?.docs || []
-  const ids = siblings.map((s) => (typeof s === 'object' ? s.id : s))
-  const pos = ids.indexOf(recipe.id)
-  const payload = await getPayloadClient()
-  const neighbourIds = [ids[pos - 1], ids[pos + 1]].filter(Boolean) as number[]
-  const neighbours = neighbourIds.length
-    ? (
-        await payload.find({
-          collection: 'recipes',
-          where: { id: { in: neighbourIds } },
-          select: { title: true, slug: true },
-          depth: 0,
-        })
-      ).docs
-    : []
-  const prev = neighbours.find((n) => n.id === ids[pos - 1])
-  const next = neighbours.find((n) => n.id === ids[pos + 1])
-
-  const meta = [
-    recipe.servings ? { label: 'Serves', value: String(recipe.servings) } : null,
-    recipe.prepMinutes ? { label: 'Prep', value: formatMinutes(recipe.prepMinutes) } : null,
-    recipe.cookMinutes ? { label: 'Cook', value: formatMinutes(recipe.cookMinutes) } : null,
-    recipe.prepMinutes && recipe.cookMinutes
-      ? { label: 'Total', value: formatMinutes(recipe.prepMinutes + recipe.cookMinutes) }
-      : null,
-  ].filter(Boolean) as { label: string; value: string }[]
+  // previous / next within the chapter, A–Z
+  const siblings = all.filter((r) => chapterOf(r)?.id === chapter?.id)
+  const pos = siblings.findIndex((r) => r.id === recipe.id)
+  const prev = pos > 0 ? siblings[pos - 1] : null
+  const next = pos >= 0 && pos < siblings.length - 1 ? siblings[pos + 1] : null
 
   return (
-    <article>
-      <div className="recipe-bar">
-        {chapter ? (
-          <Link href={`/chapters/${chapter.slug}`}>
-            ← {toRoman(chapter.order)} · {chapter.title}
-          </Link>
-        ) : (
-          <span />
-        )}
-        <span className="recipe-bar__num">{number}</span>
-        <span className="recipe-bar__actions">
-          <PrintButton />
-          {canEdit(user, recipe) ? <Link href={`/add?edit=${recipe.id}`}>Edit</Link> : null}
-        </span>
-      </div>
+    <main className="wrap">
+      <article className="sheet">
+        <span aria-hidden="true" className="ribbon screen-only" />
 
-      <header className="page-head">
-        <div className="label label--rust">{chapter?.title}</div>
-        <h1>{recipe.title}</h1>
-        {by ? <div className="flourish">from {by}</div> : null}
-      </header>
-
-      {meta.length ? (
-        <div className="meta-strip">
-          {meta.map((m) => (
-            <div key={m.label}>
-              <div className="label">{m.label}</div>
-              <div className="meta-strip__value">{m.value}</div>
-            </div>
-          ))}
+        <div className="topbar screen-only">
+          {chapter ? <Link href={`/chapters/${chapter.slug}`}>← {chapter.title}</Link> : <Link href="/chapters">← Contents</Link>}
+          <span className="topbar-actions">
+            <PrintButton icon={<PrintIcon />} />
+            {canEdit(user, recipe) ? <Link href={`/add?edit=${recipe.id}`}>Edit</Link> : null}
+          </span>
         </div>
-      ) : null}
 
-      <div className="recipe-body">
-        <section className="ingredients" aria-labelledby="ing-title">
-          <h2 className="block-title" id="ing-title">
-            Ingredients
-          </h2>
-          <div className="double-rule" />
-          <Ingredients items={items} servings={recipe.servings} />
-          {equipment.length ? (
-            <div className="equipment">
-              <h3 className="label">You'll need</h3>
+        <header className="r-title screen-only">
+          <div className="eyebrow">
+            Chapter {roman} · {chapter?.title}
+          </div>
+          <h1 className="t-recipe">{recipe.title}</h1>
+          <p className="by">{byline}</p>
+        </header>
+
+        <div className="screen-only">
+          <RecipeBody
+            serves={recipe.servings ?? null}
+            prep={formatMinutes(recipe.prepMinutes)}
+            cook={formatMinutes(recipe.cookMinutes)}
+            ready={formatMinutes(total)}
+            intro={recipe.intro || null}
+            ingredients={items}
+            equipment={splitLines(recipe.equipmentText)}
+            steps={steps}
+            notes={recipe.notes || null}
+            photo={photo}
+            credit={credit}
+            tags={tagsOf(recipe).map((t) => ({ id: t.id, name: t.name }))}
+            source={recipe.sourceUrl || null}
+          />
+        </div>
+
+        <nav className="r-foot screen-only" aria-label="More in this chapter">
+          {prev ? (
+            <Link className="prev" href={`/recipes/${prev.slug}`}>
+              ← {prev.title}
+            </Link>
+          ) : (
+            <span />
+          )}
+          <span className="folio hide-phone">— {roman.toLowerCase()} —</span>
+          {next ? <Link href={`/recipes/${next.slug}`}>{next.title} →</Link> : <span />}
+        </nav>
+
+        {/* Print layout (design: "Print" board). Hidden on screen. */}
+        <div className="print-sheet" aria-hidden="true">
+          <div className="p-top">
+            <span>The DelBuiCo Cookbook</span>
+            <span>
+              Chapter {roman} · {chapter?.title}
+            </span>
+          </div>
+          <div>
+            <h1>{recipe.title}</h1>
+            <p className="p-by">
+              {[
+                byline,
+                recipe.servings ? `Serves ${recipe.servings}` : '',
+                recipe.prepMinutes ? `Prep ${formatMinutes(recipe.prepMinutes)}` : '',
+                recipe.cookMinutes ? `Cook ${formatMinutes(recipe.cookMinutes)}` : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          </div>
+          <div className="p-cols">
+            <div>
+              <div className="p-h">Ingredients</div>
               <ul>
-                {equipment.map((e, i) => (
-                  <li key={i}>{e}</li>
+                {items.map((i, k) => (
+                  <li key={k}>
+                    {i.raw.split(' | ')[0]}
+                    {i.note ? <i> ({i.note})</i> : null}
+                  </li>
                 ))}
               </ul>
             </div>
-          ) : null}
-        </section>
-
-        <section className="steps" aria-labelledby="steps-title">
-          {recipe.intro ? <p className="intro">{recipe.intro}</p> : null}
-          <h2 className="block-title" id="steps-title">
-            Method
-          </h2>
-          <div className="double-rule" />
-          <ol>
-            {steps.map((s, i) => (
-              <li key={i}>
-                <span className="step-text">{s}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <aside className="margin">
-          {recipe.notes ? (
             <div>
-              <div className="label label--rust" style={{ marginBottom: 10 }}>
-                In the margin
-              </div>
-              <div className="margin-note">{recipe.notes}</div>
+              <div className="p-h">Method</div>
+              <ol>
+                {steps.map((s, k) => (
+                  <li key={k}>{s}</li>
+                ))}
+              </ol>
+              {recipe.notes ? (
+                <p style={{ marginTop: 14, fontStyle: 'italic' }}>
+                  <b style={{ fontStyle: 'normal' }}>Notes: </b>
+                  {recipe.notes}
+                </p>
+              ) : null}
             </div>
-          ) : null}
-          {photo ? (
-            <img className="photo" src={photo} alt={recipe.title} />
-          ) : (
-            <div className="photo--placeholder" aria-hidden="true">
-              {recipe.title}
-            </div>
-          )}
-          {by ? (
-            <div className="credit">
-              <div className="label">Added by</div>
-              <strong>{by}</strong>
-            </div>
-          ) : null}
-          {tags.length ? (
-            <div className="tag-list">
-              {tags.map((t) => (
-                <Link key={t.id} className="tag" href={`/search?tag=${t.id}`}>
-                  {t.name}
-                </Link>
-              ))}
-            </div>
-          ) : null}
-          {recipe.sourceUrl ? (
-            <div className="source">
-              <div className="label">Original</div>
-              <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer">
-                {recipe.sourceUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
-              </a>
-            </div>
-          ) : null}
-        </aside>
-      </div>
-
-      <nav className="recipe-foot" aria-label="More in this chapter">
-        {prev ? <Link href={`/recipes/${prev.slug}`}>← {prev.title}</Link> : <span />}
-        {next ? <Link href={`/recipes/${next.slug}`}>{next.title} →</Link> : <span />}
-      </nav>
-    </article>
+          </div>
+          <div className="p-bot">
+            <span>Printed from the family cookbook</span>
+            <span>{credit === 'Family recipe' ? 'Family recipe' : credit}</span>
+          </div>
+        </div>
+      </article>
+    </main>
   )
 }

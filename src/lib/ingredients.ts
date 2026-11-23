@@ -312,22 +312,18 @@ export function quantityLabel(ing: ParsedIngredient, scale = 1): string {
   return main
 }
 
-/** Minutes → "45 min", "1 h 30", "2 days" */
+/** Minutes → "45 min", "1 h 30 min", "3 days 2 h" */
 export function formatMinutes(min: number | null | undefined): string {
   if (!min || min <= 0) return ''
-  if (min >= 1440 && min % 1440 === 0) {
-    const d = min / 1440
-    return `${d} ${d === 1 ? 'day' : 'days'}`
-  }
-  if (min >= 1440) {
-    const d = Math.floor(min / 1440)
-    const h = Math.round((min % 1440) / 60)
-    return h ? `${d} d ${h} h` : `${d} ${d === 1 ? 'day' : 'days'}`
-  }
   if (min < 60) return `${min} min`
-  const h = Math.floor(min / 60)
-  const m = min % 60
-  return m ? `${h} h ${m}` : `${h} h`
+  if (min < 1440) {
+    const h = Math.floor(min / 60)
+    const r = min % 60
+    return `${h} h${r ? ` ${r} min` : ''}`
+  }
+  const d = Math.floor(min / 1440)
+  const hh = Math.round((min % 1440) / 60)
+  return `${d} ${d === 1 ? 'day' : 'days'}${hh ? ` ${hh} h` : ''}`
 }
 
 /** ISO 8601 duration (PT1H30M, P1DT2H) → minutes */
