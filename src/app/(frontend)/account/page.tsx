@@ -31,7 +31,7 @@ export default async function AccountPage() {
         {user.role === 'admin' && totalRecipes === 0 ? <ImportButton /> : null}
         {user.role === 'admin' ? (
           <div className="notice" style={{ marginTop: 28 }}>
-            You're the admin. Invite family and manage chapters in the <a href="/admin">admin panel</a>.
+            You're the admin. Add family members, reset passwords and manage chapters in the <a href="/admin">admin panel</a>.
           </div>
         ) : null}
         <h2 className="block-title" style={{ marginTop: 40, fontSize: 26 }}>

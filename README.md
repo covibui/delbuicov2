@@ -2,7 +2,7 @@
 
 The family cookbook. Anyone can read it; family members log in to add and edit recipes.
 
-**Stack:** Payload CMS 3 + Next.js · Neon Postgres · Vercel Blob (photos) · Resend (email) · Vercel Hobby. All free tiers.
+**Stack:** Payload CMS 3 + Next.js · Neon Postgres · Vercel Blob (photos) · Vercel Hobby. All free tiers. No email service.
 
 ## What's where
 
@@ -13,7 +13,7 @@ The family cookbook. Anyone can read it; family members log in to add and edit r
 | `/recipes/[slug]` | Recipe page with ×½ / ×2 / ×3 scaling and print view |
 | `/search` | Search titles + ingredients; filter by chapter, cook, tag |
 | `/add` | **Quick Add**: paste a link, paste text, or type. Phone-friendly. `/add?edit=ID` edits. |
-| `/login`, `/set-password`, `/account` | Family login, invite links, your recipes |
+| `/login`, `/account` | Family login; change your name and password; your recipes |
 | `/admin` | Payload admin: invite people, manage chapters and tags, fix anything |
 
 **Rules:** recipes publish on save. Members edit/delete only their own recipes; the admin can edit everything. The first account ever created becomes admin.
@@ -24,10 +24,7 @@ The family cookbook. Anyone can read it; family members log in to add and edit r
 2. **Storage tab → Create Database → Neon** (free). This adds `DATABASE_URL`.
 3. **Storage tab → Create → Blob** (free, choose **public** access). This adds `BLOB_READ_WRITE_TOKEN`.
 4. **Settings → Environment Variables:** add `PAYLOAD_SECRET` (random string, e.g. `openssl rand -hex 32`).
-5. **Resend** (resend.com, free): create an API key → add `RESEND_API_KEY` in Vercel.
-   To email family members you must **verify a domain** in Resend and set `EMAIL_FROM_ADDRESS` to an address on it.
-   Without a domain, Resend only delivers to your own Resend account email.
-6. **Deploy.** The build runs database migrations first, then builds.
+5. **Deploy.** The build runs database migrations first, then builds.
 
 ### Import the old recipes (once)
 
@@ -38,12 +35,15 @@ This creates all 24 chapters (with cover photos), the tags, the 59 recipes, and 
 original authors so their recipes keep their names. Brianna's recipes are credited to the admin
 running the import. Safe to press twice. (`npm run seed` does the same from the command line.)
 
-### Invite the family
+### Add the family
 
-`/admin` → **Family** → open a person (e.g. Miche) → change the placeholder email
-(`miche@invite.pending`) to their real email → tick **Send invite email on save** → Save.
-They get a link (valid 7 days) to set their password. For someone new: **Create new**, any temporary
-password, tick the box, save.
+`/admin` → **Family**:
+- **Original authors** (Max, Miche, Xander, Alex) already exist with placeholder emails like `miche@invite.pending`.
+  Open one, put in their real email, type a temporary password in the password field, and save.
+- **Someone new:** **Create new** → name, email, temporary password → save.
+
+Give them the email and password. They can change the password on their **Account** page.
+If someone forgets their password, open their entry in the admin and type a new one.
 
 ## Local development
 

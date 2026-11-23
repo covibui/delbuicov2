@@ -267,7 +267,7 @@ export interface Media {
   };
 }
 /**
- * To invite someone: add them with any temporary password, tick “Send invite email”, and save. They get a link to set their own password.
+ * To add someone: Create new → their name, email and a temporary password → Save. Give them the password; they can change it on their Account page. Forgot a password? Open their entry here and type a new one.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
@@ -276,10 +276,6 @@ export interface User {
   id: number;
   name: string;
   role: 'admin' | 'member';
-  /**
-   * Emails them a link to set their own password. Use it again any time to resend.
-   */
-  sendInvite?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -519,7 +515,6 @@ export interface MediaSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
-  sendInvite?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

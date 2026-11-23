@@ -21,7 +21,6 @@
     "@fontsource/jost": "^5.3.0",
     "@fontsource/libre-bodoni": "^5.3.0",
     "@payloadcms/db-postgres": "3.94.1",
-    "@payloadcms/email-resend": "^3.94.1",
     "@payloadcms/next": "3.94.1",
     "@payloadcms/richtext-lexical": "3.94.1",
     "@payloadcms/storage-vercel-blob": "^3.94.1",
